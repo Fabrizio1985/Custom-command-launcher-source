@@ -1,9 +1,9 @@
-# Custom Command Launcher 1.3.9
+# Custom Command Launcher 1.3.12
 
-Il campo `Project name` viene confrontato con il nome dell'ultima cartella selezionata.
+Correzione: `${resource_loc}`, `${project_loc}` e `${container_loc}` vengono risolte usando la risorsa selezionata nel menu `Run As`.
 
-- Selezione progetto root: usa il nome del progetto.
-- Selezione cartella: usa il nome della cartella.
-- Selezione file: usa il nome della cartella che contiene il file.
-- Se esistono configurazioni specifiche per quel nome, mostra solo quelle.
-- Altrimenti mostra solo le configurazioni con `Project name` vuoto.
+Le configurazioni generiche possono quindi essere riutilizzate su più progetti mantenendo:
+
+```text
+Working directory: ${resource_loc}
+```

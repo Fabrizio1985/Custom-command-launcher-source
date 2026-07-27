@@ -20,12 +20,11 @@
 			id="it.fabrizio.eclipse.customcommand.launchShortcut"
 			label="Custom Command"
 			modes="run"
+			icon="icons/custom-command.png"
 			class="it.fabrizio.eclipse.customcommand.CustomCommandLaunchShortcut">
 			<contextualLaunch>
 				<enablement>
-					<with variable="selection">
-						<count value="1"/>
-					</with>
+					<with variable="selection"><count value="1"/></with>
 				</enablement>
 			</contextualLaunch>
 			<configurationType id="it.fabrizio.eclipse.customcommand.launchConfigurationType"/>

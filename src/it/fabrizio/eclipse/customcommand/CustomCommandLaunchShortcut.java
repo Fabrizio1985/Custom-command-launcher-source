@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
@@ -23,24 +22,34 @@ import org.eclipse.ui.PlatformUI;
 public class CustomCommandLaunchShortcut implements ILaunchShortcut2 {
 	@Override
 	public void launch(ISelection selection, String mode) {
-		launch(getLaunchConfigurations(selection), mode);
+		IResource resource = getSelectedResource(selection);
+		ILaunchConfiguration[] configurations = getVisibleConfigurations(resource);
+		remember(configurations, resource);
+		launch(configurations, mode);
 	}
 
 	@Override
 	public void launch(IEditorPart editor, String mode) {
-		launch(getLaunchConfigurations(editor), mode);
+		IResource resource = getSelectedResource(editor);
+		ILaunchConfiguration[] configurations = getVisibleConfigurations(resource);
+		remember(configurations, resource);
+		launch(configurations, mode);
 	}
 
 	@Override
 	public ILaunchConfiguration[] getLaunchConfigurations(ISelection selection) {
 		IResource resource = getSelectedResource(selection);
-		return getVisibleConfigurations(getSelectedFolderName(resource));
+		ILaunchConfiguration[] configurations = getVisibleConfigurations(resource);
+		remember(configurations, resource);
+		return configurations;
 	}
 
 	@Override
 	public ILaunchConfiguration[] getLaunchConfigurations(IEditorPart editor) {
 		IResource resource = getSelectedResource(editor);
-		return getVisibleConfigurations(getSelectedFolderName(resource));
+		ILaunchConfiguration[] configurations = getVisibleConfigurations(resource);
+		remember(configurations, resource);
+		return configurations;
 	}
 
 	@Override
@@ -53,33 +62,24 @@ public class CustomCommandLaunchShortcut implements ILaunchShortcut2 {
 		return getSelectedResource(editor);
 	}
 
-	private ILaunchConfiguration[] getVisibleConfigurations(String selectedFolderName) {
+	private void remember(ILaunchConfiguration[] configurations, IResource resource) {
+		for (ILaunchConfiguration configuration : configurations) LaunchSelectionContext.remember(configuration, resource);
+	}
+
+	private ILaunchConfiguration[] getVisibleConfigurations(IResource resource) {
+		String selectedFolderName = getSelectedFolderName(resource);
 		try {
 			ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 			ILaunchConfigurationType type = manager.getLaunchConfigurationType(CustomCommandConstants.TYPE_ID);
-			List<ILaunchConfiguration> specificConfigurations = new ArrayList<>();
-			List<ILaunchConfiguration> defaultConfigurations = new ArrayList<>();
-
+			List<ILaunchConfiguration> specific = new ArrayList<>();
+			List<ILaunchConfiguration> defaults = new ArrayList<>();
 			for (ILaunchConfiguration configuration : manager.getLaunchConfigurations(type)) {
-				String configuredNames = configuration.getAttribute(
-					CustomCommandConstants.ATTR_PROJECT_NAMES,
-					""
-				).trim();
-
-				if (configuredNames.isEmpty()) {
-					defaultConfigurations.add(configuration);
-				} else if (matchesName(configuredNames, selectedFolderName)) {
-					specificConfigurations.add(configuration);
-				}
+				String names = configuration.getAttribute(CustomCommandConstants.ATTR_PROJECT_NAMES, "").trim();
+				if (names.isEmpty()) defaults.add(configuration);
+				else if (matchesName(names, selectedFolderName)) specific.add(configuration);
 			}
-
-			List<ILaunchConfiguration> visible = specificConfigurations.isEmpty()
-				? defaultConfigurations
-				: specificConfigurations;
-
-			visible.sort(Comparator
-				.comparingInt(this::getOrder)
-				.thenComparing(ILaunchConfiguration::getName, String.CASE_INSENSITIVE_ORDER));
+			List<ILaunchConfiguration> visible = specific.isEmpty() ? defaults : specific;
+			visible.sort(Comparator.comparingInt(this::getOrder).thenComparing(ILaunchConfiguration::getName, String.CASE_INSENSITIVE_ORDER));
 			return visible.toArray(ILaunchConfiguration[]::new);
 		} catch (CoreException exception) {
 			return new ILaunchConfiguration[0];
@@ -87,25 +87,16 @@ public class CustomCommandLaunchShortcut implements ILaunchShortcut2 {
 	}
 
 	private boolean matchesName(String configuredNames, String selectedFolderName) {
-		if (selectedFolderName == null || selectedFolderName.isBlank()) {
-			return false;
-		}
-
+		if (selectedFolderName == null || selectedFolderName.isBlank()) return false;
 		for (String configuredName : configuredNames.split(";")) {
-			if (selectedFolderName.equalsIgnoreCase(configuredName.trim())) {
-				return true;
-			}
+			if (selectedFolderName.equalsIgnoreCase(configuredName.trim())) return true;
 		}
 		return false;
 	}
 
 	private String getSelectedFolderName(IResource resource) {
-		if (resource == null) {
-			return null;
-		}
-		if (resource.getType() == IResource.FILE) {
-			return resource.getParent() == null ? null : resource.getParent().getName();
-		}
+		if (resource == null) return null;
+		if (resource.getType() == IResource.FILE) return resource.getParent() == null ? null : resource.getParent().getName();
 		return resource.getName();
 	}
 
@@ -123,19 +114,11 @@ public class CustomCommandLaunchShortcut implements ILaunchShortcut2 {
 			DebugUITools.launch(configurations[0], mode);
 			return;
 		}
-		if (configurations.length == 0) {
-			MessageDialog.openInformation(
-				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
-				"Custom Command",
-				"No Custom Command matches the selected folder."
-			);
-		}
+		if (configurations.length == 0) MessageDialog.openInformation(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Custom Command", "No Custom Command matches the selected folder.");
 	}
 
 	private IResource getSelectedResource(ISelection selection) {
-		if (!(selection instanceof IStructuredSelection structured) || structured.isEmpty()) {
-			return null;
-		}
+		if (!(selection instanceof IStructuredSelection structured) || structured.isEmpty()) return null;
 		return adaptToResource(structured.getFirstElement());
 	}
 
@@ -144,12 +127,8 @@ public class CustomCommandLaunchShortcut implements ILaunchShortcut2 {
 	}
 
 	private IResource adaptToResource(Object element) {
-		if (element instanceof IResource resource) {
-			return resource;
-		}
-		if (element instanceof IAdaptable adaptable) {
-			return adaptable.getAdapter(IResource.class);
-		}
+		if (element instanceof IResource resource) return resource;
+		if (element instanceof IAdaptable adaptable) return adaptable.getAdapter(IResource.class);
 		return null;
 	}
 }

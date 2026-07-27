@@ -30,7 +30,6 @@ public class CustomCommandMainTab extends AbstractLaunchConfigurationTab {
 		Composite container = new Composite(parent, SWT.NONE);
 		container.setLayout(new GridLayout(3, false));
 		setControl(container);
-
 		ModifyListener listener = event -> changed();
 
 		new Label(container, SWT.NONE).setText("Command:");
@@ -59,7 +58,7 @@ public class CustomCommandMainTab extends AbstractLaunchConfigurationTab {
 
 		new Label(container, SWT.NONE).setText("Project name (optional):");
 		projectNamesText = new Text(container, SWT.BORDER);
-		projectNamesText.setMessage("Example: MyWorkspaceAngular");
+		projectNamesText.setMessage("Example: fabrizio-angular-library");
 		projectNamesText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		projectNamesText.addModifyListener(listener);
 		new Label(container, SWT.NONE);
@@ -103,7 +102,7 @@ public class CustomCommandMainTab extends AbstractLaunchConfigurationTab {
 		configuration.setAttribute(CustomCommandConstants.ATTR_ARGUMENTS, "");
 		configuration.setAttribute(CustomCommandConstants.ATTR_ORDER, 0);
 		configuration.setAttribute(CustomCommandConstants.ATTR_PROJECT_NAMES, "");
-		configuration.setAttribute(CustomCommandConstants.ATTR_WORKING_DIRECTORY, "${project_loc}");
+		configuration.setAttribute(CustomCommandConstants.ATTR_WORKING_DIRECTORY, "${resource_loc}");
 	}
 
 	@Override
@@ -113,7 +112,7 @@ public class CustomCommandMainTab extends AbstractLaunchConfigurationTab {
 			argumentsText.setText(configuration.getAttribute(CustomCommandConstants.ATTR_ARGUMENTS, ""));
 			orderSpinner.setSelection(configuration.getAttribute(CustomCommandConstants.ATTR_ORDER, 0));
 			projectNamesText.setText(configuration.getAttribute(CustomCommandConstants.ATTR_PROJECT_NAMES, ""));
-			workingDirectoryText.setText(configuration.getAttribute(CustomCommandConstants.ATTR_WORKING_DIRECTORY, "${project_loc}"));
+			workingDirectoryText.setText(configuration.getAttribute(CustomCommandConstants.ATTR_WORKING_DIRECTORY, "${resource_loc}"));
 		} catch (CoreException exception) {
 			setErrorMessage(exception.getMessage());
 		}
@@ -129,7 +128,7 @@ public class CustomCommandMainTab extends AbstractLaunchConfigurationTab {
 	}
 
 	@Override
-	public boolean isValid(ILaunchConfiguration launchConfig) {
+	public boolean isValid(ILaunchConfiguration configuration) {
 		setErrorMessage(null);
 		if (commandText.getText().trim().isEmpty()) {
 			setErrorMessage("Command is required.");
