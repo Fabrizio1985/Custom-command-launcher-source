@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+	<extension point="org.eclipse.debug.core.launchConfigurationTypes">
+		<launchConfigurationType
+			id="it.fabrizio.eclipse.customcommand.launchConfigurationType"
+			name="Custom Command"
+			modes="run"
+			public="true"
+			delegate="it.fabrizio.eclipse.customcommand.CustomCommandLaunchDelegate"/>
+	</extension>
+	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+		<launchConfigurationTabGroup
+			id="it.fabrizio.eclipse.customcommand.launchConfigurationTabGroup"
+			type="it.fabrizio.eclipse.customcommand.launchConfigurationType"
+			class="it.fabrizio.eclipse.customcommand.CustomCommandTabGroup"/>
+	</extension>
+	<extension point="org.eclipse.debug.ui.launchShortcuts">
+		<shortcut
+			id="it.fabrizio.eclipse.customcommand.launchShortcut"
+			label="Custom Command"
+			modes="run"
+			class="it.fabrizio.eclipse.customcommand.CustomCommandLaunchShortcut">
+			<contextualLaunch>
+				<enablement>
+					<with variable="selection">
+						<count value="1"/>
+					</with>
+				</enablement>
+			</contextualLaunch>
+			<configurationType id="it.fabrizio.eclipse.customcommand.launchConfigurationType"/>
+		</shortcut>
+	</extension>
+</plugin>
