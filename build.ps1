@@ -12,7 +12,7 @@ $PluginsDirectory = Join-Path $EclipseHome 'plugins'
 $JavacExecutable = Join-Path $JavaHome 'bin\javac.exe'
 $JarExecutable = Join-Path $JavaHome 'bin\jar.exe'
 $ArgumentsFile = Join-Path $ProjectDirectory 'javac.args'
-$JarName = 'it.fabrizio.eclipse.customcommand_1.3.12.jar'
+$JarName = 'it.fabrizio.eclipse.customcommand_1.4.0.jar'
 if (-not (Test-Path $PluginsDirectory -PathType Container)) { throw "Cartella Eclipse non valida: $EclipseHome" }
 if (-not (Test-Path $JavacExecutable -PathType Leaf)) { throw "JDK non valido: $JavacExecutable" }
 $Required = @('org.eclipse.core.commands_*.jar','org.eclipse.core.jobs_*.jar','org.eclipse.core.resources_*.jar','org.eclipse.core.runtime_*.jar','org.eclipse.core.variables_*.jar','org.eclipse.debug.core_*.jar','org.eclipse.debug.ui_*.jar','org.eclipse.equinox.common_*.jar','org.eclipse.jface_*.jar','org.eclipse.osgi_*.jar','org.eclipse.swt.*_*.jar','org.eclipse.ui_*.jar','org.eclipse.ui.workbench_*.jar')

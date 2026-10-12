@@ -67,16 +67,15 @@ public class CustomCommandLaunchShortcut implements ILaunchShortcut2 {
 	}
 
 	private ILaunchConfiguration[] getVisibleConfigurations(IResource resource) {
-		String selectedFolderName = getSelectedFolderName(resource);
 		try {
 			ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 			ILaunchConfigurationType type = manager.getLaunchConfigurationType(CustomCommandConstants.TYPE_ID);
 			List<ILaunchConfiguration> specific = new ArrayList<>();
 			List<ILaunchConfiguration> defaults = new ArrayList<>();
 			for (ILaunchConfiguration configuration : manager.getLaunchConfigurations(type)) {
-				String names = configuration.getAttribute(CustomCommandConstants.ATTR_PROJECT_NAMES, "").trim();
-				if (names.isEmpty()) defaults.add(configuration);
-				else if (matchesName(names, selectedFolderName)) specific.add(configuration);
+				String resourceFilters = configuration.getAttribute(CustomCommandConstants.ATTR_PROJECT_NAMES, "").trim();
+				if (resourceFilters.isEmpty()) defaults.add(configuration);
+				else if (matchesResource(resourceFilters, resource)) specific.add(configuration);
 			}
 			List<ILaunchConfiguration> visible = specific.isEmpty() ? defaults : specific;
 			visible.sort(Comparator.comparingInt(this::getOrder).thenComparing(ILaunchConfiguration::getName, String.CASE_INSENSITIVE_ORDER));
@@ -86,18 +85,31 @@ public class CustomCommandLaunchShortcut implements ILaunchShortcut2 {
 		}
 	}
 
-	private boolean matchesName(String configuredNames, String selectedFolderName) {
-		if (selectedFolderName == null || selectedFolderName.isBlank()) return false;
-		for (String configuredName : configuredNames.split(";")) {
-			if (selectedFolderName.equalsIgnoreCase(configuredName.trim())) return true;
+	private boolean matchesResource(String configuredFilters, IResource resource) {
+		if (resource == null) return false;
+		String workspacePath = normalizePath(resource.getFullPath().toPortableString());
+		String projectPath = normalizePath(resource.getProjectRelativePath().toPortableString());
+		String resourceName = normalizePath(resource.getName());
+		String folderName = resource.getType() == IResource.FILE && resource.getParent() != null
+			? normalizePath(resource.getParent().getName())
+			: resourceName;
+
+		for (String configuredFilter : configuredFilters.split(";")) {
+			String filter = normalizePath(configuredFilter);
+			if (filter.isEmpty()) continue;
+			if (filter.equalsIgnoreCase(workspacePath)
+					|| filter.equalsIgnoreCase(projectPath)
+					|| filter.equalsIgnoreCase(resourceName)
+					|| filter.equalsIgnoreCase(folderName)) return true;
 		}
 		return false;
 	}
 
-	private String getSelectedFolderName(IResource resource) {
-		if (resource == null) return null;
-		if (resource.getType() == IResource.FILE) return resource.getParent() == null ? null : resource.getParent().getName();
-		return resource.getName();
+	private String normalizePath(String value) {
+		String normalized = value == null ? "" : value.trim().replace('\\', '/');
+		while (normalized.startsWith("/")) normalized = normalized.substring(1);
+		while (normalized.endsWith("/")) normalized = normalized.substring(0, normalized.length() - 1);
+		return normalized;
 	}
 
 	private int getOrder(ILaunchConfiguration configuration) {

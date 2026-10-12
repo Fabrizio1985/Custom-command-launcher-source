@@ -56,9 +56,9 @@ public class CustomCommandMainTab extends AbstractLaunchConfigurationTab {
 		orderSpinner.addModifyListener(listener);
 		new Label(container, SWT.NONE);
 
-		new Label(container, SWT.NONE).setText("Project name (optional):");
+		new Label(container, SWT.NONE).setText("Resource path or name (optional):");
 		projectNamesText = new Text(container, SWT.BORDER);
-		projectNamesText.setMessage("Example: fabrizio-angular-library");
+		projectNamesText.setMessage("Example: MyWorkspaceSymfony\\tests\\MyComics\\MyTest.php");
 		projectNamesText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		projectNamesText.addModifyListener(listener);
 		new Label(container, SWT.NONE);
